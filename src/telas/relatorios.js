@@ -67,7 +67,8 @@
   }
 
   function csv(lista) {
-    const cel = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    /* Células que começam com = + - @ viram fórmula no Excel: prefixa ' para neutralizar. */
+    const cel = (v) => '"' + String(v).replace(/^[=+\-@]/, "'$&").replace(/"/g, '""') + '"';
     const reais = (c) => (c / 100).toFixed(2).replace(".", ",");
     const cab = ["Numero", "Criado em", "Cliente", "Telefone", "Cidade", "Bairro", "Itens", "Peso kg", "Subtotal", "Frete", "Total", "Pagamento", "Status", "Motivo"];
     const linhas = lista.map((p) => [

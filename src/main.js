@@ -6,7 +6,7 @@
   const E = FP.estado;
 
   /* Quais eventos redesenham cada tela (evita apagar formulário em edição). */
-  const EVENTOS = { config: ["config", "reset"], produtos: ["catalogo", "reset", "sync"], mvp: [] };
+  const EVENTOS = { config: ["config", "reset"], produtos: ["catalogo", "reset"], mvp: [] };
   let anterior = new Map();
 
   function fotografar() {
@@ -81,12 +81,20 @@
     U.$("#lEmail").focus();
   }
 
-  function iniciar() {
-    E.carregar();
-    E.tick();
+  async function abrirPainel(sessao) {
+    await E.carregar();
+    E.assinar();
+    anterior = fotografar();
+    atualizarMenu();
+    mostrarApp(sessao);
+  }
+
+  async function iniciar() {
     anterior = fotografar();
 
     E.on((ev) => {
+      if (ev.tipo === "erro") { FP.ui.toast("Não consegui salvar no banco: " + ev.motivo, "erro"); return; }
+      if (ev.tipo === "deslogado") { mostrarLogin(); return; }
       const tela = FP.ui.telaAtual();
       const filtro = EVENTOS[tela];
       if (!filtro || filtro.includes(ev.tipo)) FP.ui.redesenhar();
@@ -94,15 +102,24 @@
       avisarMudancas();
     });
 
-    U.$("#formLogin").addEventListener("submit", (e) => {
+    U.$("#formLogin").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const r = E.entrar(U.$("#lEmail").value, U.$("#lSenha").value);
-      if (!r.ok) { U.$("#lErro").textContent = r.motivo; return; }
+      const botao = U.$("#formLogin button");
+      botao.disabled = true;
       U.$("#lErro").textContent = "";
-      U.$("#lSenha").value = "";
-      mostrarApp(r.sessao);
+      try {
+        const r = await E.entrar(U.$("#lEmail").value, U.$("#lSenha").value);
+        if (!r.ok) { U.$("#lErro").textContent = r.motivo; return; }
+        U.$("#lSenha").value = "";
+        await abrirPainel(r.sessao);
+      } catch (erro) {
+        console.error(erro);
+        U.$("#lErro").textContent = "Não consegui carregar os dados: " + erro.message;
+      } finally {
+        botao.disabled = false;
+      }
     });
-    U.$("#btnSair").addEventListener("click", () => { E.sair(); mostrarLogin(); });
+    U.$("#btnSair").addEventListener("click", async () => { await E.sair(); mostrarLogin(); });
     U.$$(".menu-item").forEach((b) => b.addEventListener("click", () => {
       FP.ui.irPara(b.dataset.tela);
       document.body.classList.remove("menu-aberto");
@@ -126,8 +143,15 @@
 
     relogio();
     atualizarMenu();
-    const sessao = E.sessao();
-    if (sessao) mostrarApp(sessao); else mostrarLogin();
+    try {
+      await E.restaurarSessao();
+      const sessao = E.sessao();
+      if (sessao) await abrirPainel(sessao); else mostrarLogin();
+    } catch (erro) {
+      console.error(erro);
+      mostrarLogin();
+      U.$("#lErro").textContent = "Não consegui conectar ao banco: " + erro.message;
+    }
   }
 
   document.addEventListener("DOMContentLoaded", iniciar);

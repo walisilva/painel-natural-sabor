@@ -5,9 +5,9 @@ fruta que vende pelo WhatsApp). Mostra, de ponta a ponta, como o atendimento pel
 bot vira pedido, passa pelo pagamento e segue para a entrega, com as **regras de
 negócio reais** aplicadas, mesmo sendo uma demonstração.
 
-> **É um protótipo de demonstração.** Não tem backend nem banco: tudo roda no
-> navegador. O estado vive só em memória durante o uso: **recarregar a página
-> devolve tudo ao estado inicial**.
+> **Frontend + Supabase.** Pedidos, catálogo, configurações e login ficam no Supabase
+> (veja `supabase/README.md`). O **bot do WhatsApp e o webhook do Mercado Pago ainda são
+> simulados** no navegador (tela *Simulador WhatsApp*); em produção viram Edge Functions.
 
 ---
 
@@ -30,12 +30,10 @@ Depois abra <http://127.0.0.1:8080/>.
 npx serve .
 ```
 
-### Acesso de demonstração
+### Acesso
 
-| Campo   | Valor                              |
-| ------- | ---------------------------------- |
-| E-mail  | `operador@naturalsabor.com.br`     |
-| Senha   | `polpa123`                         |
+Login pelo Supabase Auth. Os operadores são criados no painel do Supabase
+(Authentication → Users) e cadastrados na tabela `operadores`. Não há credencial no repositório.
 
 ---
 
@@ -125,16 +123,17 @@ prototipo-painel/
 ├── index.html            # Casca do app, sprite de ícones e ordem de carga
 ├── servir.py             # Servidor estático local (sem cache)
 ├── package.json          # Scripts de teste e start (sem dependências)
+├── supabase/             # Migrações SQL e README do banco
 ├── estilos/              # CSS por área (base, layout, pedidos, relatórios…)
 ├── src/
 │   ├── nucleo/
 │   │   ├── regras.js     # Regras de negócio puras (UMD: navegador + Node)
 │   │   └── util.js       # Formatação, cópia, helpers de DOM
 │   ├── dados/
-│   │   ├── dados.js      # Config padrão, catálogo inicial, km por bairro
-│   │   └── seed.js       # Gera os pedidos de exemplo em todas as etapas
+│   │   ├── dados.js      # Km por bairro e CEPs offline
+│   │   └── supabase.js   # Cliente Supabase
 │   ├── estado/
-│   │   └── estado.js     # "Backend" em memória: transições, tick, sessão
+│   │   └── estado.js     # Cache + gravação no Supabase, Realtime, sessão (Auth)
 │   ├── bot/
 │   │   ├── textos.js     # Falas do bot
 │   │   ├── cep.js        # Consulta de CEP (ViaCEP + tabela offline)
@@ -163,8 +162,8 @@ npm test
 
 - **JavaScript puro, sem build nem framework.** Os módulos são IIFE registrados
   em `window.FP`.
-- **Estado imutável**, em memória. O `localStorage` é usado só para sincronizar
-  abas abertas ao mesmo tempo (painel + simulador), nunca para restaurar sessões
-  anteriores, por isso o reload zera tudo.
+- **Estado imutável** em cache na memória (`estado.js`), com leitura síncrona para as telas.
+  Cada mudança é gravada no Supabase (só o que mudou, com coalescência) e o Realtime
+  traz mudanças de outras abas e da rotina de prazos do servidor.
 - **`regras.js` é UMD**: roda no navegador e também sob `node --test`.
 - **CEP** consultado no ViaCEP, com tabela offline de reserva.

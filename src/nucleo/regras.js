@@ -39,6 +39,11 @@
     "2027-05-01": "Dia do Trabalho",
   });
 
+  /* Feriados em uso: começam com a lista acima e são trocados pelos do banco (tabela feriados). */
+  let feriadosAtuais = FERIADOS;
+  function definirFeriados(mapa) { feriadosAtuais = Object.freeze(Object.assign({}, mapa)); }
+  const listaFeriados = () => feriadosAtuais;
+
   /* ---------- Etapas do pedido ---------- */
   const ETAPAS = Object.freeze({
     conversa: { rotulo: "Conversa iniciada", kanban: true },
@@ -147,7 +152,7 @@
   }
 
   function motivoNaoUtil(iso, feriados) {
-    const lista = feriados || FERIADOS;
+    const lista = feriados || feriadosAtuais;
     const dow = new Date(iso + "T12:00:00").getDay();
     if (dow === 0) return "domingo";
     if (dow === 6) return "sábado";
@@ -326,7 +331,7 @@
   }
 
   return {
-    MINUTO, HORA, DIA, LIMITE_PESO_KG, PRAZO_AGENDAMENTO_DIAS, CIDADES_COBERTAS, FERIADOS,
+    MINUTO, HORA, DIA, LIMITE_PESO_KG, PRAZO_AGENDAMENTO_DIAS, CIDADES_COBERTAS, FERIADOS, definirFeriados, listaFeriados,
     ETAPAS, COLUNAS_KANBAN, TRANSICOES_MANUAIS,
     podeMoverManual, motivoBloqueioMovimento, normalizar, cidadeAtendida, cepValido,
     validarConfigFrete, calcularFrete,

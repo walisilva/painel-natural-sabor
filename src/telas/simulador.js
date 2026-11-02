@@ -121,8 +121,7 @@
       (off ? '<button class="btn" data-tempo="0">Voltar ao real</button>' : "") + "</div>" +
       "<h3>CEPs para testar</h3><ul class=\"regras\">" + CEPS_TESTE.map(([c, r]) => "<li><code>" + c + "</code> · " + esc(r) + "</li>").join("") + "</ul>" +
       '<p class="mudo">O CEP é consultado no ViaCEP de verdade. Sem internet, usa uma tabela de reserva.</p>' +
-      "<h3>Dica</h3><p class=\"mudo\">Abra o painel em outra aba: o Kanban atualiza sozinho e toca o alerta quando o pagamento cai.</p>" +
-      '<button class="btn" id="sReset">Restaurar dados de exemplo</button>';
+      "<h3>Dica</h3><p class=\"mudo\">Abra o painel em outra aba: o Kanban atualiza sozinho e toca o alerta quando o pagamento cai.</p>";
     U.$("#sFerr", el).innerHTML = html;
 
     U.$$("[data-pagar]", el).forEach((b) => b.addEventListener("click", () => pagar(p.id, b.dataset.pagar)));
@@ -134,11 +133,6 @@
       const min = Number(b.dataset.tempo);
       if (min) E().avancarRelogio(min * R.MINUTO); else E().zerarRelogio();
     }));
-    U.$("#sReset", el).addEventListener("click", () => {
-      E().resetar();
-      selecionado = null;
-      FP.ui.toast("Dados de exemplo restaurados.", "ok");
-    });
   }
 
   function pagar(id, metodo) {

@@ -1,25 +1,7 @@
-/* Dados de exemplo e tabelas de apoio do protótipo.
-   Catálogo e preços são EXEMPLOS: o catálogo real está pendente (cartão da Etapa 0). */
+/* Tabelas de apoio. Config, catálogo e feriados vêm do Supabase (ver supabase/migrations). */
 (function (FP) {
   "use strict";
   const R = FP.regras;
-
-  const CONFIG_PADRAO = Object.freeze({
-    freteMinimoCent: 1200,
-    tarifaBaseCent: 500,
-    valorPorKmCent: 180,
-    multiplicador: 1.1, // decisão: Uber Envios + 10%
-    janelaPagamentoMin: 15, // decisão de 29/10
-    abandonoHoras: 24, // proposta aceita
-    cidadesAtivas: ["João Pessoa", "Cabedelo", "Bayeux"],
-  });
-
-  /* Operador de demonstração. A senha fica só como hash SHA-256 de "polpa123". */
-  const OPERADOR_DEMO = Object.freeze({
-    email: "operador@naturalsabor.com.br",
-    nome: "Operador",
-    senhaDemo: "polpa123",
-  });
 
   /* Distância de ROTA estimada (km) da fábrica até o bairro.
      No sistema real vem da API de mapa (Google/OpenRouteService), não desta tabela. */
@@ -48,49 +30,6 @@
     "01310100": { rua: "Avenida Paulista", bairro: "Bela Vista", cidade: "São Paulo", uf: "SP" },
   });
 
-  function variante(id, rotulo, pesoG, precoCent, ativo) {
-    return { id, rotulo, pesoG, precoCent, ativo };
-  }
-
-  /* Preço por sabor x tamanho (nunca valor único). */
-  function sabor(id, nome, precoKg, opcoes) {
-    const o = opcoes || {};
-    const off = o.off || [];
-    const arred = (v) => Math.round(v / 10) * 10;
-    return {
-      id,
-      nome,
-      ativo: o.ativo !== false,
-      variantes: [
-        variante(id + "-1kg", "1 kg", 1000, precoKg, !off.includes("1kg")),
-        variante(id + "-500", "500 g", 500, arred(precoKg * 0.56), !off.includes("500")),
-        variante(id + "-250", "250 g", 250, arred(precoKg * 0.32), !off.includes("250")),
-      ],
-    };
-  }
-
-  function catalogoInicial() {
-    return [
-      {
-        id: "polpa",
-        nome: "Polpa de fruta",
-        ativo: true,
-        sabores: [
-          sabor("acerola", "Acerola", 1600),
-          sabor("caja", "Cajá", 2200),
-          sabor("caju", "Caju", 1600),
-          sabor("goiaba", "Goiaba", 1700),
-          sabor("graviola", "Graviola", 3200, { ativo: false }),
-          sabor("manga", "Manga", 1800),
-          sabor("maracuja", "Maracujá", 2400),
-          sabor("morango", "Morango", 2600, { off: ["250"] }),
-          sabor("uva", "Uva", 2300),
-          sabor("abacaxi-hortela", "Abacaxi com hortelã", 2000),
-        ],
-      },
-    ];
-  }
-
   function kmPara(bairro, cidade) {
     const c = R.normalizar(cidade);
     const tabela = KM_POR_BAIRRO[c] || {};
@@ -99,5 +38,5 @@
     return { km: KM_PADRAO_CIDADE[c] || 10, estimado: true };
   }
 
-  FP.dados = { CONFIG_PADRAO, OPERADOR_DEMO, CEPS_OFFLINE, catalogoInicial, kmPara };
+  FP.dados = { CEPS_OFFLINE, kmPara };
 })(window.FP = window.FP || {});

@@ -42,7 +42,7 @@
   function render(el) {
     const cfg = E().config();
     const hoje = R.isoLocal(E().agora());
-    const feriados = Object.entries(R.FERIADOS).filter(([d]) => d >= hoje).slice(0, 6);
+    const feriados = Object.entries(R.listaFeriados()).filter(([d]) => d >= hoje).slice(0, 6);
     el.innerHTML =
       '<div class="config-grade">' +
       '<section class="painel"><h2>Frete</h2><p class="mudo">Fórmula tipo Uber Envios: <b>max(mínimo ; base + valor por km × km) × multiplicador</b>. Frete nunca é grátis.</p>' +

@@ -1,4 +1,4 @@
-/* Utilitários de tela: formatação, escape de HTML, seletores e hash de senha. */
+/* Utilitários de tela: formatação, escape de HTML e seletores. */
 (function (FP) {
   "use strict";
 
@@ -58,54 +58,6 @@
     return ok;
   }
 
-  /* SHA-256 em JS puro. crypto.subtle não existe fora de https/localhost,
-     e o protótipo também roda por IP da rede. No sistema real: bcrypt/argon2 no servidor. */
-  function sha256(texto) {
-    const bytes = new TextEncoder().encode(texto);
-    const K = [];
-    const H = [];
-    let n = 2;
-    let achados = 0;
-    const frac = (x) => ((x - Math.floor(x)) * 4294967296) | 0;
-    while (achados < 64) {
-      let primo = true;
-      for (let d = 2; d * d <= n; d += 1) if (n % d === 0) { primo = false; break; }
-      if (primo) {
-        if (achados < 8) H[achados] = frac(Math.pow(n, 1 / 2));
-        K[achados] = frac(Math.pow(n, 1 / 3));
-        achados += 1;
-      }
-      n += 1;
-    }
-    const tam = bytes.length;
-    const total = ((tam + 9 + 63) >> 6) << 6;
-    const msg = new Uint8Array(total);
-    msg.set(bytes);
-    msg[tam] = 0x80;
-    const bits = tam * 8;
-    const dv = new DataView(msg.buffer);
-    dv.setUint32(total - 4, bits >>> 0);
-    dv.setUint32(total - 8, Math.floor(bits / 4294967296));
-    const W = new Int32Array(64);
-    const rotr = (x, r) => (x >>> r) | (x << (32 - r));
-    for (let off = 0; off < total; off += 64) {
-      for (let i = 0; i < 16; i += 1) W[i] = dv.getInt32(off + i * 4);
-      for (let i = 16; i < 64; i += 1) {
-        const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
-        const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
-        W[i] = (W[i - 16] + s0 + W[i - 7] + s1) | 0;
-      }
-      let [a, b, c, d, e, f, g, h] = H;
-      for (let i = 0; i < 64; i += 1) {
-        const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + W[i]) | 0;
-        const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
-        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
-      }
-      [a, b, c, d, e, f, g, h].forEach((v, i) => { H[i] = (H[i] + v) | 0; });
-    }
-    return H.map((v) => (v >>> 0).toString(16).padStart(8, "0")).join("");
-  }
-
   FP.util = {
     $: (sel, raiz) => (raiz || document).querySelector(sel),
     $$: (sel, raiz) => Array.from((raiz || document).querySelectorAll(sel)),
@@ -127,6 +79,5 @@
     copiar,
     duracao,
     contagem,
-    sha256,
   };
 })(window.FP = window.FP || {});
